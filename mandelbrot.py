@@ -13,15 +13,14 @@ class MandelImage:
     def _get_mandel_points(self):
         ratio_x = self.size[0]/2
         ratio_y = self.size[1]/2
-        points = []
-        for (x, y) in [(x, y) for x in range(-self.size[0], self.size[0]) for y in range(-self.size[1], self.size[1])]:
+        for (x, y) in ((x, y) for x in range(-self.size[0], self.size[0]) for y in range(-self.size[1], self.size[1])):
             x, y = x/(self.size[0]/2), y/(self.size[1]/2)
-            if MandelImage.check_point(x+y*1j): points.append(((self.size[0]/4)*(x+2), (self.size[1]/4)*(y+2)))
-        return points
+            if MandelImage.check_point(x+y*1j): yield ((self.size[0]/4)*(x+2), (self.size[1]/4)*(y+2))
 
     def drawMandel(self):
         d = ImageDraw.Draw(self.im)
-        d.point(self._get_mandel_points())
+        for point in self._get_mandel_points():
+            d.point(point)
         self.im.save('test.png')
 
     @staticmethod
