@@ -1,17 +1,10 @@
 __author__ = 'jerzy'
 import pyopencl as cl
 import numpy as np
-import time
-from PIL import Image, ImageDraw
-import sys
-size = 4000
+
 ctx = cl.create_some_context()
 queue = cl.CommandQueue(ctx)
 
-a_np = np.dstack(np.meshgrid(np.linspace(-2, 2, size), np.linspace(-2, 2, size))).reshape(-1, 2).astype(np.float32)
-a_np = np.hstack((a_np, np.zeros((a_np.shape[0], 2)))).astype(np.float32)
-a_g = cl.Buffer(ctx, cl.mem_flags.READ_WRITE, size=a_np.nbytes)
-cl.enqueue_write_buffer(queue, a_g, a_np)
 kernel = """
     struct Complex{
         float x; float y;
@@ -62,6 +55,3 @@ kernel = """
     }
     """
 prog = cl.Program(ctx, kernel).build()
-prog.calc(queue, a_np.shape, None, a_g)
-res_np = np.empty_like(a_np)
-cl.enqueue_read_buffer(queue, a_g, res_np).wait()
