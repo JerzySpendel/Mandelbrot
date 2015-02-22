@@ -9,26 +9,28 @@ import numpy as np
 class MandelImage:
     ITERATIONS = 50
 
-    def __init__(self, size=(5000, 5000)):
+    def __init__(self, size=(500, 500)):
         self.size = size
         self.im = Image.new('RGB', self.size)
-        self.area = Area((-2, 2), 4, 4, 5000, 5000)
+        self.area = Area((-2, 2), 4, 4, 500, 500)
 
     def _get_mandel_points(self):
-        self.area.mandelbrot()
-        self.area.transform(mandelbrot=True)
-        self.area.mandelbrot_points *= self.size[0]/4
-        self.area.mandelbrot_points = self.area.mandelbrot_points.astype(np.int)
-        for point in self.area.mandelbrot_points:
-            yield point
+        points = self.area.opencl_mandelbrot()
+        points *= self.size[0]/4
+        points += self.size[0]/2
+        points = points.astype(np.int32)
+        for point in points:
+            # Sadly, but third column is also multiplicated :/
+            if point[2] == int(1*self.size[0]/4 + self.size[1]/2):
+                yield point[0], point[1]
 
     def drawMandel(self):
         d = ImageDraw.Draw(self.im)
         i = 0
         for point in self._get_mandel_points():
-            d.point(list(point))
+            d.point(point)
             i += 1
-        self.im.save('test.png')
+        self.im.save('test1.png')
         print(i)
 
     @staticmethod
