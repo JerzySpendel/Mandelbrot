@@ -1,33 +1,41 @@
 from PIL import Image
 from PIL import ImageDraw
 from PIL import Image
+from area import Area
 import math
+import numpy as np
+
 
 class MandelImage:
     ITERATIONS = 50
 
-    def __init__(self):
-        self.size = (4000,4000)
+    def __init__(self, size=(5000, 5000)):
+        self.size = size
         self.im = Image.new('RGB', self.size)
+        self.area = Area((-2, 2), 4, 4, 5000, 5000)
 
     def _get_mandel_points(self):
-        ratio_x = self.size[0]/2
-        ratio_y = self.size[1]/2
-        for (x, y) in ((x, y) for x in range(-self.size[0], self.size[0]) for y in range(-self.size[1], self.size[1])):
-            x, y = x/(self.size[0]/2), y/(self.size[1]/2)
-            if MandelImage.check_point(x+y*1j): yield ((self.size[0]/4)*(x+2), (self.size[1]/4)*(y+2))
+        self.area.mandelbrot()
+        self.area.transform(mandelbrot=True)
+        self.area.mandelbrot_points *= self.size[0]/4
+        self.area.mandelbrot_points = self.area.mandelbrot_points.astype(np.int)
+        for point in self.area.mandelbrot_points:
+            yield point
 
     def drawMandel(self):
         d = ImageDraw.Draw(self.im)
+        i = 0
         for point in self._get_mandel_points():
-            d.point(point)
+            d.point(list(point))
+            i += 1
         self.im.save('test.png')
+        print(i)
 
     @staticmethod
     def check_point(p):
         z = 0+0j
         for i in range(MandelImage.ITERATIONS):
             z = z**2 + p
-        if math.isnan(z.real) and math.isnan(z.imag):
-            return False
+            if abs(z) > 2 or (math.isnan(z.real) and math.isnan(z.imag)):
+                return False
         return True
