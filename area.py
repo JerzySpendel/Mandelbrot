@@ -12,6 +12,10 @@ class Area:
         self.space_y = np.linspace(LU[1] - h, LU[1], wh + 1)
         self.w, self.h = w, h
         self.prog = cl.prog
+        self.product = Area.cartesian_product(self.space_x, self.space_y)
+        self.area = np.hstack((self.product, np.zeros((self.product.shape[0], 2)))).astype(np.float32)
+        self.area_buff = pyopencl.Buffer(cl.ctx, pyopencl.mem_flags.READ_WRITE, size=self.area.nbytes)
+        pyopencl.enqueue_write_buffer(cl.queue, self.area_buff, self.area)
 
     @staticmethod
     def cartesian_product(a, b):
@@ -38,12 +42,7 @@ class Area:
         self.mandelbrot_points = np.array(list(self.points_in_mandelbrot()))
 
     def opencl_mandelbrot(self):
-        flags = pyopencl.mem_flags
-        cartesian_product = Area.cartesian_product(self.space_x, self.space_y)
-        area = np.hstack((cartesian_product, np.zeros((cartesian_product.shape[0], 2)))).astype(np.float32)
-        a_buff = pyopencl.Buffer(cl.ctx, flags.READ_WRITE, size=area.nbytes)
-        pyopencl.enqueue_write_buffer(cl.queue, a_buff, area)
-        self.prog.calc(cl.queue, area.shape, None, a_buff)
-        res = np.empty_like(area)
-        pyopencl.enqueue_read_buffer(cl.queue, a_buff, res).wait()
+        self.prog.calc(cl.queue, self.area.shape, None, self.area_buff)
+        res = np.empty_like(self.area)
+        pyopencl.enqueue_read_buffer(cl.queue, self.area_buff, res).wait()
         return res
