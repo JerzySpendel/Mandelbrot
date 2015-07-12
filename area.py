@@ -1,6 +1,7 @@
 import numpy as np
 import cl
 import pyopencl
+import time
 
 
 class Area:
