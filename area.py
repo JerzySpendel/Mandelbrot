@@ -12,6 +12,7 @@ class Area:
         self.space_y = np.linspace(LU[1] - h, LU[1], wh + 1)
         self.w, self.h = w, h
         self.prog = cl.prog
+        print(self.space_x.nbytes, self.space_y.nbytes)
         self.product = Area.cartesian_product(self.space_x, self.space_y)
         self.area = np.hstack((self.product, np.zeros((self.product.shape[0], 2)))).astype(np.float32)
         self.area_buff = pyopencl.Buffer(cl.ctx, pyopencl.mem_flags.READ_WRITE, size=self.area.nbytes)

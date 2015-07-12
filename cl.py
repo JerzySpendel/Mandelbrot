@@ -19,7 +19,7 @@ kernel = """
         return c;
     }
     int check_julia_point(const struct Complex p){
-        struct Complex c; c.x = -0.1; c.y = 0.65;
+        struct Complex c; c.x = -0.73; c.y = 0.19;
         struct Complex z; z.x = p.x; z.y = p.y;
         int i;
         for(i = 0; i < 50; i++){

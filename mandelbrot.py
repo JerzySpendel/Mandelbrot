@@ -14,27 +14,37 @@ class MandelImage:
         self.size = size
         self.im = Image.new('RGB', self.size)
         self.ratio = 1
-        self.area = Area((-2, 2), 4, 4, size[0], size[1])
+        ep = self.equal_parts = 100
+        x = self.x_coordinates = [2-(4/ep)*x for x in range(1, ep+1)]
+        y = self.y_coordinates = [2-(4/ep)*x for x in range(1, ep+1)]
+        self.xy_coordinates = [(x_, y_) for x_ in x for y_ in y]
+        self.area = (Area((xy[0], xy[1]), 4/ep, 4/ep, size[0]/ep, size[1]/ep) for xy in self.xy_coordinates)
 
-    def _get_mandel_points(self):
+    def _get_mandel_points(self, return_array=False):
         t = time.time()
-        points = self.area.opencl_mandelbrot() # numpy array, not list
-        print('Wgenerowano w', time.time() - t)
-        points[:, [0, 1]] *= self.ratio*self.size[0]/4
-        points[:, [0, 1]] += self.size[0]/2
-        points = points.astype(np.int32)
-        for point in points:
-            if point[2] == 1:
-                yield point[0], point[1]
+        i = 0
+        for area in self.area:
+            print(i)
+            i += 1
+            points = area.opencl_mandelbrot() # numpy array, not list
+            print('Wgenerowano w', time.time() - t)
+            points[:, [0, 1]] *= self.ratio*self.size[0]/4
+            points[:, [0, 1]] += self.size[0]/2
+            points = points.astype(np.int32)
+            for point in points:
+                if point[2] == 1:
+                    yield point[0], point[1]
+
+
+    def get_mandel_array(self):
+        return self.area.opencl_mandelbrot()
 
     def drawMandel(self):
         d = ImageDraw.Draw(self.im)
         i = 0
         for point in self._get_mandel_points():
             d.point(point)
-            i += 1
         self.im.save('test1.png')
-        print(i)
 
     @staticmethod
     def check_point(p):
